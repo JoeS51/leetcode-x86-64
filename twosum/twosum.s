@@ -2,20 +2,33 @@
 
 .bss
 table:
-    .zero 96
+    .zero 393216  # lots of slots in hash table
 
 .text
 .globl _start
 
 _start:
     lea rdi, [rip + table] # address of table
+    #insert into hash table
     mov edx, 3  # key
     mov ecx, 8  # val
     call insert_hash_table
 
+    mov edx, 32771  # key
+    mov ecx, 5  # val
+    call insert_hash_table
+
+    mov edx, 1  # key
+    mov ecx, 2  # val
+    call insert_hash_table
+
+    mov edx, 3  # key
+    mov ecx, 9  # val
+    call insert_hash_table
+
     # read hash table
     lea rbx, [rip + table]
-    mov edx, 1
+    mov edx, 32771
     call read_hash_table
     
     mov edi, eax
@@ -24,8 +37,8 @@ _start:
 
 insert_hash_table:
     mov r8d, edx
-    and r8d, 7 # slot we're trying
-    mov r9d, 8 # probing attempts
+    and r8d, 32767 # slot we're trying
+    mov r9d, 32768  # probing attempts
     jmp probe
 
 probe:
@@ -37,7 +50,7 @@ probe:
     je store
     
     inc r8d
-    and r8d, 7
+    and r8d, 32767
 
     dec r9d
     cmp r9d, 0
@@ -55,8 +68,8 @@ store:
 
 read_hash_table:
     mov r8d, edx
-    and r8d, 7
-    mov r9d, 8
+    and r8d, 32767
+    mov r9d, 32768
     jmp read_probe
 
 read_probe:
@@ -70,11 +83,12 @@ read_probe:
     je read_result
     
     inc r8d
-    and r8d, 7
+    and r8d, 32767
 
     dec r9d
     cmp r9d, 0
     jne read_probe
+    jmp read_missing
 
 read_result:
     mov eax, dword ptr[r10+4]
