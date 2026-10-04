@@ -3,37 +3,75 @@
 .bss
 table:
     .zero 393216  # lots of slots in hash table
+answer:
+    .zero 8
+.data
+input:
+    .long 2, 9, 11, 15
+input_end:
 
 .text
 .globl _start
 
+# edx = key for insert_hash_table
+# ecx = val for insert_hash_table
+# rdi = address of table
+# ebx = curr value in array
+
 _start:
     lea rdi, [rip + table] # address of table
     #insert into hash table
-    mov edx, 3  # key
-    mov ecx, 8  # val
-    call insert_hash_table
+    # mov edx, 3  # key
+    # mov ecx, 8  # val
+    # call insert_hash_table
 
-    mov edx, 32771  # key
-    mov ecx, 5  # val
-    call insert_hash_table
-
-    mov edx, 1  # key
-    mov ecx, 2  # val
-    call insert_hash_table
-
-    mov edx, 3  # key
-    mov ecx, 9  # val
-    call insert_hash_table
+    lea r12, [rip + input] # address of input
+    mov r13d, 17 # target
+    mov r14d, 0 # current index
+    mov r15d, 4 # num elements
+    call loop
 
     # read hash table
-    lea rbx, [rip + table]
-    mov edx, 32771
-    call read_hash_table
+    # lea rbx, [rip + table]
+    # mov edx, 32771
+    # call read_hash_table
     
     mov edi, eax
     mov eax, 60
     syscall
+
+loop:
+    cmp r14d, r15d
+    jge done_not_found
+
+    # get the value of this idx
+    mov ebx, dword ptr [r12 + r14 * 4]
+    # desired
+    mov edx, r13d
+    sub edx, ebx
+    call read_hash_table
+    
+    cmp eax, -1
+    jne done_found
+    
+    #insert this num to hashtable
+    mov edx, ebx
+    mov ecx, r14d
+    call insert_hash_table
+    
+    inc r14d
+    jmp loop
+
+done_found:
+    lea r11, [rip + answer]
+    mov dword ptr [r11], eax
+    mov dword ptr [r11+4], r14d
+    mov eax, 1
+    ret
+
+done_not_found:
+    mov eax, -1
+    ret
 
 insert_hash_table:
     mov r8d, edx
