@@ -7,7 +7,7 @@ answer:
     .zero 8
 .data
 input:
-    .long 2, 9, 11, 15
+    .long 32767, 65535, -1, 0, 98303, -32769, 42, 7
 input_end:
 
 .text
@@ -26,17 +26,25 @@ _start:
     # call insert_hash_table
 
     lea r12, [rip + input] # address of input
-    mov r13d, 17 # target
+    mov r13d, -32762 # target
     mov r14d, 0 # current index
-    mov r15d, 4 # num elements
+    mov r15d, 8 # num elements
     call loop
+
+    cmp eax, 1
+    jne test_failed
+    lea r11, [rip + answer]
+    cmp dword ptr [r11], 5
+    jne test_failed
+    cmp dword ptr [r11 + 4], 7
+    jne test_failed
 
     # read hash table
     # lea rbx, [rip + table]
     # mov edx, 32771
     # call read_hash_table
     
-    mov edi, eax
+    mov edi, 0
     mov eax, 60
     syscall
 
@@ -135,3 +143,8 @@ read_result:
 read_missing:
     mov eax, -1
     ret
+
+test_failed:
+    mov edi, 1                 # failed
+    mov eax, 60
+    syscall
